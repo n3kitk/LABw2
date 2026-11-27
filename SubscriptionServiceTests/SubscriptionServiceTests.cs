@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Moq;
 using Xunit;
@@ -11,21 +10,29 @@ namespace SubscriptionServiceTests
 {
     public class SubscriptionServiceTests
     {
+        private readonly Mock<IMemberRepository> repo;
+        private readonly Mock<IPaymentService> payment;
+        private readonly Mock<INotificationService> notify;
+        private readonly SubscriptionService service;
+
+        public SubscriptionServiceTests()
+        {
+            repo = new Mock<IMemberRepository>();
+            payment = new Mock<IPaymentService>();
+            notify = new Mock<INotificationService>();
+
+            service = new SubscriptionService(
+                repo.Object, payment.Object, notify.Object);
+        }
+
         /// <summary>
         /// Перевіряє, що при відсутності учасника виникає виняток і оплата не перевіряється
         /// </summary>
         [Fact]
         public void RenewSubscription_MemberNotFound_ThrowsException()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             repo.Setup(r => r.GetById(It.IsAny<int>()))
                 .Returns((Member?)null);
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             Assert.Throws<ArgumentException>(
                 () => service.RenewSubscription(1, 100m, 30));
@@ -41,10 +48,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void RenewSubscription_PaymentFails_ReturnsFalse()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             var member = new Member
             {
                 Id = 1,
@@ -54,9 +57,6 @@ namespace SubscriptionServiceTests
             repo.Setup(r => r.GetById(1)).Returns(member);
             payment.Setup(p => p.VerifyPayment(1, 100m))
                    .Returns(false);
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             var result = service.RenewSubscription(1, 100m, 30);
 
@@ -74,10 +74,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void RenewSubscription_Success_UpdatesMember()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             var member = new Member
             {
                 Id = 1,
@@ -90,9 +86,6 @@ namespace SubscriptionServiceTests
             repo.Setup(r => r.GetById(1)).Returns(member);
             payment.Setup(p => p.VerifyPayment(1, 100m))
                    .Returns(true);
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             var result = service.RenewSubscription(1, 100m, 30);
 
@@ -114,10 +107,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void DeactivateExpiredMembers_ExpiredMember_IsDeactivated()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             var member = new Member
             {
                 Id = 1,
@@ -127,9 +116,6 @@ namespace SubscriptionServiceTests
 
             repo.Setup(r => r.GetAll())
                 .Returns(new List<Member> { member });
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             service.DeactivateExpiredMembers();
 
@@ -150,10 +136,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void DeactivateExpiredMembers_ActiveSubscription_IsNotUpdated()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             var member = new Member
             {
                 Id = 2,
@@ -163,9 +145,6 @@ namespace SubscriptionServiceTests
 
             repo.Setup(r => r.GetAll())
                 .Returns(new List<Member> { member });
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             service.DeactivateExpiredMembers();
 
@@ -183,10 +162,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void DeactivateExpiredMembers_NoSubscriptionEnd_DoesNotDeactivateMember()
         {
-            var repo = new Mock<IMemberRepository>();
-            var payment = new Mock<IPaymentService>();
-            var notify = new Mock<INotificationService>();
-
             var member = new Member
             {
                 Id = 3,
@@ -196,9 +171,6 @@ namespace SubscriptionServiceTests
 
             repo.Setup(r => r.GetAll())
                 .Returns(new List<Member> { member });
-
-            var service = new SubscriptionService(
-                repo.Object, payment.Object, notify.Object);
 
             service.DeactivateExpiredMembers();
 

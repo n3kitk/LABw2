@@ -8,6 +8,15 @@ namespace SubscriptionServiceTests
 {
     public class MemberServiceTests
     {
+        private readonly Mock<IMemberRepository> repo;
+        private readonly MemberService service;
+
+        public MemberServiceTests()
+        {
+            repo = new Mock<IMemberRepository>();
+            service = new MemberService(repo.Object);
+        }
+
         /// <summary>
         /// Перевіряє статус учасника для активного та неактивного станів
         /// </summary>
@@ -16,8 +25,6 @@ namespace SubscriptionServiceTests
         [InlineData(false)]
         public void IsActive_ReturnsCorrectStatus(bool expected)
         {
-            var repo = new Mock<IMemberRepository>();
-
             var member = new Member
             {
                 Id = 1,
@@ -25,8 +32,6 @@ namespace SubscriptionServiceTests
             };
 
             repo.Setup(r => r.GetById(1)).Returns(member);
-
-            var service = new MemberService(repo.Object);
 
             var result = service.IsActive(1);
 
@@ -39,12 +44,8 @@ namespace SubscriptionServiceTests
         [Fact]
         public void IsActive_MemberNotFound_ReturnsFalse()
         {
-            var repo = new Mock<IMemberRepository>();
-
             repo.Setup(r => r.GetById(99))
                 .Returns((Member?)null);
-
-            var service = new MemberService(repo.Object);
 
             var result = service.IsActive(99);
 
@@ -52,17 +53,13 @@ namespace SubscriptionServiceTests
         }
 
         /// <summary>
-        /// Перевіряє, що метод GetMember повертає null,у тому випадку якщо учасника не знайдено
+        /// Перевіряє, що метод GetMember повертає null, у тому випадку якщо учасника не знайдено
         /// </summary>
         [Fact]
         public void GetMember_NotFound_ReturnsNull()
         {
-            var repo = new Mock<IMemberRepository>();
-
             repo.Setup(r => r.GetById(99))
                 .Returns((Member?)null);
-
-            var service = new MemberService(repo.Object);
 
             var result = service.GetMember(99);
 
@@ -75,8 +72,6 @@ namespace SubscriptionServiceTests
         [Fact]
         public void GetMember_Found_ReturnsMember()
         {
-            var repo = new Mock<IMemberRepository>();
-
             var member = new Member
             {
                 Id = 1,
@@ -84,8 +79,6 @@ namespace SubscriptionServiceTests
             };
 
             repo.Setup(r => r.GetById(1)).Returns(member);
-
-            var service = new MemberService(repo.Object);
 
             var result = service.GetMember(1);
 
